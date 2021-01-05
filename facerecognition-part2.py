@@ -5,6 +5,8 @@ from os import listdir
 import pickle
 from os.path import isfile, join
 
+from numpy.core.records import array
+
 # Get the training data we previously made
 data_path = 'face/'
 data_paths = {
@@ -15,37 +17,51 @@ only_files = {
     "ananya": [],
     "komal": []
 }
-for key in data_paths:
-    only_files[key] = [f for f in listdir(data_paths[key]) if isfile(join(data_paths[key], f))]
+models = {
+    "ananya": {
+        "data_path": "face/ananya/",
+        "files": [],
+        "model": None
+    },
+    "komal": {
+        "data_path": "face/komal/",
+        "files": [],
+        "model": None
+    }
+}
+for key in models:
+    models[key]["files"] = [f for f in listdir(models[key]["data_path"]) if isfile(join(models[key]["data_path"], f))]
+    Training_Data, Labels = [], []
+
+    for i, files in enumerate(models[key]["files"]):
+        image_path = models[key]["data_path"] + models[key]["files"][i]
+        images = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        Training_Data.append( np.asarray( images, dtype=np.uint8))
+        Labels.append(i)
+    
+    # Create a numpy array for both training data and labels
+    Labels = np.asarray(Labels, dtype=np.int32)
+
+    # Initialize facial recognizer
+    models[key]["model"] =  cv2.face.LBPHFaceRecognizer_create()
+    # NOTE: For OpenCV 3.0 use cv2.face.createLBPHFaceRecognizer()
+
+    #Training_Data), np.asarray(Labels))
+    print("Started training model for " + key)
+
+    # Let's train our model
+    models[key]["model"].train(np.asarray( Training_Data), np.asarray(Labels))
+    print("Model trained sucessefully for " + key)
 
 
 
-onlyfiles = [f for f in listdir(data_path) if isfile(join(data_path, f))]
+# onlyfiles = [f for f in listdir(data_path) if isfile(join(data_path, f))]
 
 # Create arrays for training data and labels
-Training_Data, Labels = [], []
+# Training_Data, Labels = [], []
 
 # Open training images in our datapath
 # Create a numpy array for training data
-for i, files in enumerate(onlyfiles):
-    image_path = data_path + onlyfiles[i]
-    images = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    Training_Data.append( np.asarray( images, dtype=np.uint8))
-    Labels.append(i)
-
-# Create a numpy array for both training data and labels
-Labels = np.asarray(Labels, dtype=np.int32)
-
-# Initialize facial recognizer
-model =  cv2.face.LBPHFaceRecognizer_create()
-# NOTE: For OpenCV 3.0 use cv2.face.createLBPHFaceRecognizer()
-
-#Training_Data), np.asarray(Labels))
-print("Model trained sucessefully")
-
-# Let's train our model
-model.train(np.asarray( Training_Data), np.asarray(Labels))
-print("Model trained sucessefully")
 
 
 
@@ -85,20 +101,38 @@ while True:
         face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
         # Pass face to prediction model
         # "results" comprises of a tuple containing the label and the confidence value
-        results = model.predict(face)
-        # Tell about the confidence of user.
-        if results[1] < 500:
-            confidence = int( 100 * (1 - (results[1])/400) )
-            display_string = str(confidence) + '% Confident it is User'
-        cv2.putText(image, display_string, (100, 120), cv2.FONT_HERSHEY_COMPLEX, 1, (255,120,150), 2)
-        # If confidence is greater than 90 then the face will be recognized.
-        if confidence > 80:
-            cv2.putText(image, "Unlocked", (250, 450), cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2)
-            cv2.imshow('Face Recognition', image )
-        # If confidence is less than 90 then the face will not be recognized.
+
+        foundFace = False
+        user = None
+        for key in models:
+            if foundFace == True:
+                break
+            results = models[key]["model"].predict(face)
+            if results[1] < 500:
+                confidence = int( 100 * (1 - (results[1])/400) )
+                if confidence > 80:
+                    user = key
+                    foundFace = True
+                # display_string = str(confidence) + '% Confident it is User'
+
+        if foundFace == True:
+            cv2.putText(image, user, (100, 120), cv2.FONT_HERSHEY_COMPLEX, 1, (255,120,150), 2)
         else:
-            cv2.putText(image, "Locked", (250, 450), cv2.FONT_HERSHEY_COMPLEX, 1,  (0,0,255), 2)
-            cv2.imshow('Face Recognition', image )
+            cv2.putText(image, "Could not find user", (100, 120), cv2.FONT_HERSHEY_COMPLEX, 1, (255,120,150), 2)
+        # results = model.predict(face)
+        # Tell about the confidence of user.
+        # if results[1] < 500:
+        #     confidence = int( 100 * (1 - (results[1])/400) )
+        #     display_string = str(confidence) + '% Confident it is User'
+        # cv2.putText(image, display_string, (100, 120), cv2.FONT_HERSHEY_COMPLEX, 1, (255,120,150), 2)
+        # # If confidence is greater than 90 then the face will be recognized.
+        # if confidence > 80:
+        #     cv2.putText(image, "Unlocked", (250, 450), cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2)
+        #     cv2.imshow('Face Recognition', image )
+        # # If confidence is less than 90 then the face will not be recognized.
+        # else:
+        #     cv2.putText(image, "Locked", (250, 450), cv2.FONT_HERSHEY_COMPLEX, 1,  (0,0,255), 2)
+        #     cv2.imshow('Face Recognition', image )
     # Raise exception in case, no image is found
     except:
         cv2.putText(image, "No Face Found", (220, 120) , cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2)
