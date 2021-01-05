@@ -120,6 +120,7 @@ while True:
         else:
             cv2.putText(image, "Could not find user", (100, 120), cv2.FONT_HERSHEY_COMPLEX, 1, (255,120,150), 2)
     except Exception as e:
+        print(face)
         print(str(e))
         cv2.putText(image, "No Face Found", (220, 120) , cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2)
         cv2.putText(image, "Locked", (250, 450), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2)
