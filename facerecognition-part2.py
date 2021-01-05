@@ -114,27 +114,13 @@ while True:
                     user = key
                     foundFace = True
                 # display_string = str(confidence) + '% Confident it is User'
-
+        
         if foundFace == True:
             cv2.putText(image, user, (100, 120), cv2.FONT_HERSHEY_COMPLEX, 1, (255,120,150), 2)
         else:
             cv2.putText(image, "Could not find user", (100, 120), cv2.FONT_HERSHEY_COMPLEX, 1, (255,120,150), 2)
-        # results = model.predict(face)
-        # Tell about the confidence of user.
-        # if results[1] < 500:
-        #     confidence = int( 100 * (1 - (results[1])/400) )
-        #     display_string = str(confidence) + '% Confident it is User'
-        # cv2.putText(image, display_string, (100, 120), cv2.FONT_HERSHEY_COMPLEX, 1, (255,120,150), 2)
-        # # If confidence is greater than 90 then the face will be recognized.
-        # if confidence > 80:
-        #     cv2.putText(image, "Unlocked", (250, 450), cv2.FONT_HERSHEY_COMPLEX, 1, (0,255,0), 2)
-        #     cv2.imshow('Face Recognition', image )
-        # # If confidence is less than 90 then the face will not be recognized.
-        # else:
-        #     cv2.putText(image, "Locked", (250, 450), cv2.FONT_HERSHEY_COMPLEX, 1,  (0,0,255), 2)
-        #     cv2.imshow('Face Recognition', image )
-    # Raise exception in case, no image is found
-    except:
+    except Exception as e:
+        print(str(e))
         cv2.putText(image, "No Face Found", (220, 120) , cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2)
         cv2.putText(image, "Locked", (250, 450), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2)
         cv2.imshow('Face Recognition', image )
